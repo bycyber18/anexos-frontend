@@ -1,22 +1,23 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
-// 1. Layout Principal (Tu Sidebar + Header)
+// Cambia layouts (con L mayúscula) por layouts (con l minúscula)
 import LayoutAdmin from "./layouts/LayoutAdmin";
 
-// 2. Las Vistas Hijas
+// 2. Las Vistas Hijas (Verifica que las mayúsculas coincidan con tus archivos)
+// Si el archivo en la carpeta es "crearanexo.tsx", el import debe ser "./components/crearanexo"
 import Dashboard from "./components/Dashboard";
-import CrearAnexo from "./components/CrearAnexo";
-import GestionarAnexos from "./components/GestionarAnexos";
-import Configuracion from "./components/Configuracion";
+import CrearAnexo from "./components/crearanexo";
+import GestionarAnexos from "./components/gestionaranexo";
+import Configuracion from "./components/configuracion";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <LayoutAdmin />, // <--- Aquí cargamos tu Sidebar directamente en la raíz
+    element: <LayoutAdmin />, 
     children: [
       {
         index: true,
-        element: <Navigate to="dashboard" replace />, // Redirige automático al entrar a "/"
+        element: <Navigate to="/dashboard" replace />, 
       },
       {
         path: "dashboard", 

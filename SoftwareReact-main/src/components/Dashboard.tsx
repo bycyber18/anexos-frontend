@@ -1,14 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { API_URL } from "../services/config";
+import { DashboardService } from "../services/DashboardService";
 
-// 🔹 Interfaz alineada con MongoDB REAL
 interface Anexo {
   _id: string;
   nombrePlantilla: string;
   datosRellenados: {
-    nombre_ejecutor?: string;
+    nombre?: string; 
   };
   fechaGeneracion: string;
 }
@@ -16,131 +14,63 @@ interface Anexo {
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // 🔹 Estados
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Estadísticas
   const [statsData, setStatsData] = useState({
     total: 0,
     hoy: 0,
   });
 
-  // 🔹 Carga de datos reales
   useEffect(() => {
-    const cargarDatos = async () => {
+    const cargar = async () => {
       try {
         setLoading(true);
-
-        const response = await axios.get(
-          `${API_URL}/anexos`,
-          //getAuthHeaders()
-        );
-
-        const listaAnexos: Anexo[] = response.data;
-
-        setAnexos(listaAnexos);
-
-        // 📅 Cálculo de creados hoy usando fechaGeneracion
-        const hoyISO = new Date().toISOString().split("T")[0];
-
-        const creadosHoy = listaAnexos.filter((a) =>
-          a.fechaGeneracion?.startsWith(hoyISO)
-        ).length;
-
-        setStatsData({
-          total: listaAnexos.length,
-          hoy: creadosHoy,
-        });
-
-        setLoading(false);
+        const data = await DashboardService.fetchDashboardData();
+        setAnexos(data.ultimosAnexos);
+        setStatsData({ total: data.total, hoy: data.hoy });
       } catch (err) {
-        console.error("❌ Error cargando dashboard:", err);
-        setError("No se pudieron cargar los datos reales.");
+        setError("Error de conexión con el servidor");
+      } finally {
         setLoading(false);
       }
     };
-
-    cargarDatos();
+    cargar();
   }, []);
 
-  // 🔹 Tarjetas
   const statsCards = [
-    {
-      title: "Total Anexos",
-      value: statsData.total.toString(),
-      icon: "bi-folder-fill",
-      color: "primary",
-    },
-    {
-      title: "Creados Hoy",
-      value: statsData.hoy.toString(),
-      icon: "bi-plus-circle-fill",
-      color: "success",
-    },
-    {
-      title: "Pendientes",
-      value: "0",
-      icon: "bi-exclamation-triangle-fill",
-      color: "warning",
-    },
-    {
-      title: "Usuarios",
-      value: "1",
-      icon: "bi-people-fill",
-      color: "info",
-    },
+    { title: "Total Anexos", value: statsData.total.toString(), icon: "bi-folder-fill", color: "primary" },
+    { title: "Creados Hoy", value: statsData.hoy.toString(), icon: "bi-plus-circle-fill", color: "success" },
+    { title: "Pendientes", value: "0", icon: "bi-exclamation-triangle-fill", color: "warning" },
+    { title: "Usuarios", value: "1", icon: "bi-people-fill", color: "info" },
   ];
 
-  // 🔹 Estados de carga / error
-  if (loading)
-    return (
-      <div className="p-5 text-center text-muted">
-        Conectando con el backend...
-      </div>
-    );
+  if (loading) return <div className="p-5 text-center text-muted">Conectando con el backend...</div>;
+  if (error) return <div className="p-5 text-center text-danger fw-bold">{error}</div>;
 
-  if (error)
-    return (
-      <div className="p-5 text-center text-danger fw-bold">{error}</div>
-    );
-
-  // 🔹 Render principal
   return (
     <div className="container-fluid p-0">
-      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="h4 fw-bold text-dark">Panel de Control</h2>
-          <p className="text-muted m-0">
-            Resumen en tiempo real desde MongoDB.
-          </p>
+          <p className="text-muted m-0">Resumen en tiempo real desde MongoDB.</p>
         </div>
-        <button
-          className="btn btn-primary rounded-pill px-4 shadow-sm"
-          onClick={() => navigate("/admin/crear-anexo")}
-        >
-          <i className="bi bi-plus-lg me-2"></i>
-          Nuevo Anexo
+        <button className="btn btn-primary rounded-pill px-4 shadow-sm" onClick={() => navigate("/crear-anexo")}>
+          <i className="bi bi-plus-lg me-2"></i> Nuevo Anexo
         </button>
       </div>
 
-      {/* Tarjetas */}
       <div className="row g-4 mb-5">
         {statsCards.map((stat, index) => (
           <div className="col-12 col-sm-6 col-xl-3" key={index}>
             <div className="card border-0 shadow-sm rounded-4 h-100">
               <div className="card-body p-4 d-flex align-items-center">
-                <div
-                  className={`rounded-circle p-3 bg-${stat.color}-subtle text-${stat.color} me-3`}
-                >
+                <div className={`rounded-circle p-3 bg-${stat.color}-subtle text-${stat.color} me-3`}>
                   <i className={`bi ${stat.icon} fs-3`}></i>
                 </div>
                 <div>
-                  <h6 className="text-muted text-uppercase small fw-bold mb-1">
-                    {stat.title}
-                  </h6>
+                  <h6 className="text-muted text-uppercase small fw-bold mb-1">{stat.title}</h6>
                   <h2 className="fw-bold mb-0">{stat.value}</h2>
                 </div>
               </div>
@@ -150,24 +80,16 @@ export default function Dashboard() {
       </div>
 
       <div className="row g-4">
-        {/* Accesos rápidos */}
         <div className="col-lg-4">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-body p-4">
               <h5 className="fw-bold mb-4">Accesos Rápidos</h5>
               <div className="d-grid gap-3">
-                <button
-                  className="btn btn-light text-start p-3 rounded-3 d-flex align-items-center"
-                  onClick={() => navigate("/admin/gestionar-anexos")}
-                >
-                  <div className="bg-primary text-white rounded p-2 me-3">
-                    <i className="bi bi-list-ul"></i>
-                  </div>
+                <button className="btn btn-light text-start p-3 rounded-3 d-flex align-items-center" onClick={() => navigate("/admin/gestionar-anexos")}>
+                  <div className="bg-primary text-white rounded p-2 me-3"><i className="bi bi-list-ul"></i></div>
                   <div>
                     <div className="fw-bold">Listado Completo</div>
-                    <div className="small text-muted">
-                      {anexos.length} registros encontrados
-                    </div>
+                    <div className="small text-muted">{statsData.total} registros encontrados</div>
                   </div>
                 </button>
               </div>
@@ -175,17 +97,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Tabla */}
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
               <h5 className="fw-bold m-0">Últimos Anexos</h5>
-              <button
-                className="btn btn-sm btn-outline-primary rounded-pill"
-                onClick={() => navigate("/admin/gestionar-anexos")}
-              >
-                Ver todos
-              </button>
+              <button className="btn btn-sm btn-outline-primary rounded-pill" onClick={() => navigate("/admin/gestionar-anexos")}>Ver todos</button>
             </div>
 
             <div className="table-responsive">
@@ -199,49 +115,25 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {anexos.slice(0, 5).map((anexo) => (
+                  {anexos.map((anexo) => (
                     <tr key={anexo._id}>
                       <td className="ps-4 fw-bold">
-                        {anexo.datosRellenados?.nombre_ejecutor ||
-                          "Sin asignar"}
+                        {/* 🔹 Aquí usamos la propiedad 'nombre' corregida */}
+                        {anexo.datosRellenados?.nombre || "Sin asignar"}
                       </td>
                       <td className="text-muted small">
-                        {new Date(anexo.fechaGeneracion).toLocaleDateString(
-                          "es-CL",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
+                        {new Date(anexo.fechaGeneracion).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" })}
                       </td>
-                      <td>
-                        <span className="badge bg-success-subtle text-success rounded-pill px-3">
-                          Generado
-                        </span>
-                      </td>
+                      <td><span className="badge bg-success-subtle text-success rounded-pill px-3">Generado</span></td>
                       <td className="text-end pe-4">
-                        <button
-                          className="btn btn-sm btn-light text-primary"
-                          onClick={() =>
-                            navigate(`/admin/editar-anexo/${anexo._id}`)
-                          }
-                        >
+                        <button className="btn btn-sm btn-light text-primary" onClick={() => navigate(`/admin/editar-anexo/${anexo._id}`)}>
                           <i className="bi bi-pencil-fill"></i>
                         </button>
                       </td>
                     </tr>
                   ))}
-
                   {anexos.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="text-center p-4 text-muted"
-                      >
-                        No hay anexos registrados.
-                      </td>
-                    </tr>
+                    <tr><td colSpan={4} className="text-center p-4 text-muted">No hay anexos registrados.</td></tr>
                   )}
                 </tbody>
               </table>

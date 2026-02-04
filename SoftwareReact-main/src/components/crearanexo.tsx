@@ -10,7 +10,7 @@ export default function CrearAnexo() {
   // ESTADO PARA EL PDF 
   const [pdfFile, setPdfFile] = useState<File | null>(null);
 
-  // --- CONFIGURACIÓN DE PLANTILLAS ---
+  
   const plantillas = [
     { 
       id: 'plantilla_anexo2.docx', 
@@ -84,20 +84,18 @@ export default function CrearAnexo() {
   return (
     <div className="container-fluid fade-in h-100">
       
-      {/* Cabecera */}
+     
       <div className="mb-4">
         <h2 className="h3 fw-bold text-dark mb-1">Generador de Anexos</h2>
         <p className="text-muted">Sube una Base Técnica (PDF) para usar IA, o rellena manualmente.</p>
       </div>
 
       <div className="row g-4 h-100">
-        
-        {/* --- COLUMNA IZQUIERDA: FORMULARIO --- */}
+     
         <div className="col-lg-6 d-flex flex-column">
           <div className="card border-0 shadow-sm rounded-4 flex-grow-1" style={{minHeight: '600px'}}>
             <div className="card-body p-4 overflow-auto custom-scrollbar" style={{ maxHeight: '80vh' }}>
               
-              {/* 1. Selector de Plantilla */}
               <div className="mb-4 bg-light p-3 rounded-3 border">
                 <label className="form-label fw-bold small text-uppercase text-primary mb-2">1. Selecciona Plantilla</label>
                 <select 

@@ -1,21 +1,20 @@
 import { useState } from 'react';
-import PizZip from 'pizzip';
-import Docxtemplater from 'docxtemplater';
 import { saveAs } from 'file-saver';
+import { AnexoService } from '../services/CrearAnexo';// Importamos el servicio
 
 export default function CrearAnexo() {
   const [plantillaId, setPlantillaId] = useState("");
   const [loading, setLoading] = useState(false);
-  // Estado para guardar los datos que escribe el usuario
   const [formData, setFormData] = useState<Record<string, string>>({});
+  
+  // ESTADO PARA EL PDF 
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
 
   // --- CONFIGURACIÓN DE PLANTILLAS ---
-  // Aquí defines el nombre del archivo Word, la imagen de vista previa y los campos a llenar
   const plantillas = [
     { 
       id: 'plantilla_anexo2.docx', 
       nombre: 'Anexo N° 2 - Plan Formativo SENCE',
-      // IMPORTANTE: Debes poner una captura de pantalla de tu Word en esta ruta: public/img/
       previewImg: '/img/vista_previa_anexo2.png', 
       campos: [
         { key: 'nombre_ejecutor', label: 'Nombre Organismo Ejecutor', type: 'text' },
@@ -27,53 +26,56 @@ export default function CrearAnexo() {
         { key: 'entidad_requirente', label: 'Entidad Requirente', type: 'text' },
         { key: 'código_curso', label: 'Código del Curso', type: 'text' },
         { key: 'horas', label: 'Horas Totales', type: 'number' },
-        { key: 'objetivo_general', label: 'Objetivo General (Metodología)', type: 'textarea' },
-        { key: 'contenidos', label: 'Contenidos (Competencias)', type: 'textarea' },
+        { key: 'objetivo_general', label: 'Objetivo General', type: 'textarea' },
+        { key: 'contenidos', label: 'Contenidos', type: 'textarea' },
       ]
     }
   ];
 
   const plantillaSeleccionada = plantillas.find(p => p.id === plantillaId);
 
-  // Maneja el cambio de texto en los inputs
+  
   const handleInputChange = (key: string, value: string) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  // Lógica para descargar el Word
-  const handleGenerarDocumento = async () => {
-    if (!plantillaId) return alert("Selecciona una plantilla");
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setPdfFile(e.target.files[0]);
+    } else {
+      setPdfFile(null);
+    }
+  };
+
+  
+  const handleProcesar = async () => {
+    if (!plantillaId) return alert("Por favor selecciona una plantilla.");
     setLoading(true);
 
     try {
-      // 1. Busca el archivo en la carpeta public/templates
-      const response = await fetch(`/templates/${plantillaId}`);
-      if (!response.ok) throw new Error("No se encontró el archivo .docx en la carpeta public/templates");
+      let blobWord;
+
       
-      const content = await response.arrayBuffer();
-      const zip = new PizZip(content);
-      
-      // 2. Procesa el documento
-      const doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
-      });
+      if (pdfFile) {
+        // Si no hay pdf
+        console.log("Iniciando generación con IA...");
+        blobWord = await AnexoService.generarInteligente(pdfFile, formData, plantillaId);
+        alert("✨ ¡Documento generado con Inteligencia Artificial!");
+      } else {
+        // Si es que se carga algun pdf
+        console.log("Iniciando generación manual...");
+        blobWord = await AnexoService.generarManual(formData, plantillaId);
+        alert("✅ Documento generado manualmente.");
+      }
 
-      // 3. Reemplaza las {variables} con lo que escribió el usuario
-      doc.render(formData);
+     
+      saveAs(blobWord, `Anexo_${pdfFile ? 'IA' : 'Manual'}_${Date.now()}.docx`);
 
-      // 4. Genera el blob
-      const out = doc.getZip().generate({
-        type: "blob",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
-
-      // 5. Descarga
-      saveAs(out, `Anexo_${new Date().getTime()}.docx`);
-
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Error: " + (error as Error).message);
+      const msg = error.response?.data?.error || error.message || "Error desconocido";
+      alert(`❌ Error al generar: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -84,8 +86,8 @@ export default function CrearAnexo() {
       
       {/* Cabecera */}
       <div className="mb-4">
-        <h2 className="h3 fw-bold text-dark mb-1">Generador de Documentos</h2>
-        <p className="text-muted">Completa los datos a la izquierda visualizando el modelo a la derecha.</p>
+        <h2 className="h3 fw-bold text-dark mb-1">Generador de Anexos</h2>
+        <p className="text-muted">Sube una Base Técnica (PDF) para usar IA, o rellena manualmente.</p>
       </div>
 
       <div className="row g-4 h-100">
@@ -104,6 +106,7 @@ export default function CrearAnexo() {
                   onChange={(e) => {
                     setPlantillaId(e.target.value);
                     setFormData({}); // Limpiar form al cambiar
+                    setPdfFile(null); // Limpiar PDF
                   }}
                 >
                   <option value="">-- Selecciona el documento --</option>
@@ -113,23 +116,46 @@ export default function CrearAnexo() {
                 </select>
               </div>
 
-              {/* 2. Campos Dinámicos */}
               {plantillaSeleccionada ? (
                 <div className="fade-in">
+                  
+                
+                  <div className={`mb-4 p-3 rounded-3 border ${pdfFile ? 'border-success bg-success-subtle' : 'border-primary border-opacity-25 bg-white'}`}>
+                    <label className="form-label fw-bold text-dark d-flex align-items-center justify-content-between">
+                      <span>
+                        <i className="bi bi-robot me-2"></i>
+                        Carga Inteligente (Opcional)
+                      </span>
+                      {pdfFile && <span className="badge bg-success">PDF Cargado</span>}
+                    </label>
+                    <input 
+                      type="file" 
+                      accept="application/pdf"
+                      className="form-control"
+                      onChange={handleFileChange}
+                    />
+                    <div className="form-text small mt-2">
+                      {pdfFile 
+                        ? "✅ La IA leerá este PDF para completar los campos técnicos automáticamente."
+                        : "ℹ️ Sube las Bases Técnicas (PDF) para que la IA complete el anexo por ti."}
+                    </div>
+                  </div>
+
+                  
                   <h6 className="fw-bold border-bottom pb-2 mb-3 text-dark">
-                    2. Llenar Datos: <span className="text-primary">{plantillaSeleccionada.nombre}</span>
+                    3. Datos Administrativos
                   </h6>
                   
                   <div className="row g-3">
                     {plantillaSeleccionada.campos.map((campo) => (
-                      <div key={campo.key} className={campo.type === 'textarea' ? 'col-12' : 'col-md-12'}>
+                      <div key={campo.key} className={campo.type === 'textarea' ? 'col-12' : 'col-md-6'}>
                         <label className="form-label small fw-bold text-muted mb-1">{campo.label}</label>
                         
                         {campo.type === 'textarea' ? (
                           <textarea 
                             className="form-control bg-light border-0 rounded-3"
                             rows={3}
-                            placeholder={`Escribe aquí...`}
+                            placeholder={pdfFile ? "La IA intentará llenar esto si lo dejas vacío..." : "Escribe aquí..."}
                             onChange={(e) => handleInputChange(campo.key, e.target.value)}
                             value={formData[campo.key] || ''}
                           />
@@ -137,6 +163,7 @@ export default function CrearAnexo() {
                           <input 
                             type={campo.type} 
                             className="form-control bg-light border-0 rounded-3 p-2"
+                            placeholder="..."
                             onChange={(e) => handleInputChange(campo.key, e.target.value)}
                             value={formData[campo.key] || ''}
                           />
@@ -145,17 +172,23 @@ export default function CrearAnexo() {
                     ))}
                   </div>
 
-                  {/* Botón Descargar */}
-                  <div className="d-grid mt-5 sticky-bottom bg-white pt-3">
+                 
+                  <div className="d-grid mt-5 sticky-bottom bg-white pt-3 border-top">
                     <button 
-                      onClick={handleGenerarDocumento}
-                      className="btn btn-primary rounded-pill py-3 fw-bold shadow hover-scale"
+                      onClick={handleProcesar}
+                      className={`btn rounded-pill py-3 fw-bold shadow hover-scale ${pdfFile ? 'btn-success' : 'btn-primary'}`}
                       disabled={loading}
                     >
                       {loading ? (
-                        <span><span className="spinner-border spinner-border-sm me-2"></span>Generando Word...</span>
+                        <span><span className="spinner-border spinner-border-sm me-2"></span>Procesando en Servidor...</span>
                       ) : (
-                        <span><i className="bi bi-download me-2"></i>Descargar Documento Listo</span>
+                        <span>
+                          {pdfFile ? (
+                            <><i className="bi bi-stars me-2"></i>Generar con IA (Usando PDF)</>
+                          ) : (
+                            <><i className="bi bi-file-text me-2"></i>Generar Manualmente</>
+                          )}
+                        </span>
                       )}
                     </button>
                   </div>
@@ -163,42 +196,30 @@ export default function CrearAnexo() {
               ) : (
                 <div className="text-center py-5 text-muted h-100 d-flex flex-column justify-content-center">
                   <i className="bi bi-arrow-up-circle fs-1 mb-3 opacity-50"></i>
-                  <p>Por favor selecciona una plantilla arriba para comenzar a editar.</p>
+                  <p>Selecciona una plantilla para comenzar.</p>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* --- COLUMNA DERECHA: VISTA PREVIA (FOTO) --- */}
+       
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm rounded-4 h-100 bg-secondary bg-opacity-10 position-relative overflow-hidden">
-            
-            {/* Cabecera de la vista previa */}
             <div className="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
               <h6 className="fw-bold m-0 text-primary">👁️ Vista Preliminar</h6>
               <span className="badge bg-light text-dark border">Imagen de Referencia</span>
             </div>
             
-            {/* Contenedor de la Imagen */}
             <div className="card-body p-0 d-flex align-items-start justify-content-center overflow-auto custom-scrollbar" style={{ height: '75vh' }}>
               {plantillaSeleccionada ? (
                 <div className="p-4 text-center">
-                  {/* AQUÍ SE MUESTRA LA FOTO DE TU WORD */}
                   <img 
                     src={plantillaSeleccionada.previewImg} 
                     alt="Vista Previa Documento" 
                     className="shadow-lg border bg-white"
-                    style={{ 
-                      maxWidth: '100%', 
-                      width: 'auto', 
-                      height: 'auto',
-                      borderRadius: '4px' 
-                    }}
-                    onError={(e) => {
-                      // Si falla la imagen, muestra esto
-                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/500x700?text=Imagen+No+Encontrada';
-                    }}
+                    style={{ maxWidth: '100%', width: 'auto', borderRadius: '4px' }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/500x700?text=Imagen+No+Encontrada'; }}
                   />
                 </div>
               ) : (
@@ -214,12 +235,12 @@ export default function CrearAnexo() {
 
       </div>
 
-      {/* Estilos para la barra de desplazamiento interna */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f8f9fa; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #adb5bd; }
+        .bg-success-subtle { background-color: #d1e7dd; }
       `}</style>
     </div>
   );

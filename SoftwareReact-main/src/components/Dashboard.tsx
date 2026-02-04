@@ -1,25 +1,123 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { API_URL } from "../services/config";
+
+// 🔹 Interfaz alineada con MongoDB REAL
+interface Anexo {
+  _id: string;
+  nombrePlantilla: string;
+  datosRellenados: {
+    nombre_ejecutor?: string;
+  };
+  fechaGeneracion: string;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  
-  const stats = [
-    { title: "Total Anexos", value: "125", icon: "bi-folder-fill", color: "primary" },
-    { title: "Creados Hoy", value: "3", icon: "bi-plus-circle-fill", color: "success" },
-    { title: "Pendientes", value: "12", icon: "bi-exclamation-triangle-fill", color: "warning" },
-    { title: "Usuarios", value: "8", icon: "bi-people-fill", color: "info" },
+  // 🔹 Estados
+  const [anexos, setAnexos] = useState<Anexo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Estadísticas
+  const [statsData, setStatsData] = useState({
+    total: 0,
+    hoy: 0,
+  });
+
+  // 🔹 Carga de datos reales
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+
+        const response = await axios.get(
+          `${API_URL}/anexos`,
+          //getAuthHeaders()
+        );
+
+        const listaAnexos: Anexo[] = response.data;
+
+        setAnexos(listaAnexos);
+
+        // 📅 Cálculo de creados hoy usando fechaGeneracion
+        const hoyISO = new Date().toISOString().split("T")[0];
+
+        const creadosHoy = listaAnexos.filter((a) =>
+          a.fechaGeneracion?.startsWith(hoyISO)
+        ).length;
+
+        setStatsData({
+          total: listaAnexos.length,
+          hoy: creadosHoy,
+        });
+
+        setLoading(false);
+      } catch (err) {
+        console.error("❌ Error cargando dashboard:", err);
+        setError("No se pudieron cargar los datos reales.");
+        setLoading(false);
+      }
+    };
+
+    cargarDatos();
+  }, []);
+
+  // 🔹 Tarjetas
+  const statsCards = [
+    {
+      title: "Total Anexos",
+      value: statsData.total.toString(),
+      icon: "bi-folder-fill",
+      color: "primary",
+    },
+    {
+      title: "Creados Hoy",
+      value: statsData.hoy.toString(),
+      icon: "bi-plus-circle-fill",
+      color: "success",
+    },
+    {
+      title: "Pendientes",
+      value: "0",
+      icon: "bi-exclamation-triangle-fill",
+      color: "warning",
+    },
+    {
+      title: "Usuarios",
+      value: "1",
+      icon: "bi-people-fill",
+      color: "info",
+    },
   ];
 
+  // 🔹 Estados de carga / error
+  if (loading)
+    return (
+      <div className="p-5 text-center text-muted">
+        Conectando con el backend...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="p-5 text-center text-danger fw-bold">{error}</div>
+    );
+
+  // 🔹 Render principal
   return (
     <div className="container-fluid p-0">
-    
+      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="h4 fw-bold text-dark">Panel de Control</h2>
-          <p className="text-muted m-0">Bienvenido de nuevo, aquí tienes el resumen de hoy.</p>
+          <p className="text-muted m-0">
+            Resumen en tiempo real desde MongoDB.
+          </p>
         </div>
-        <button 
+        <button
           className="btn btn-primary rounded-pill px-4 shadow-sm"
           onClick={() => navigate("/admin/crear-anexo")}
         >
@@ -28,18 +126,22 @@ export default function Dashboard() {
         </button>
       </div>
 
-     
+      {/* Tarjetas */}
       <div className="row g-4 mb-5">
-        {stats.map((stat, index) => (
+        {statsCards.map((stat, index) => (
           <div className="col-12 col-sm-6 col-xl-3" key={index}>
-            <div className="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+            <div className="card border-0 shadow-sm rounded-4 h-100">
               <div className="card-body p-4 d-flex align-items-center">
-                <div className={`rounded-circle p-3 bg-${stat.color}-subtle text-${stat.color} me-3`}>
+                <div
+                  className={`rounded-circle p-3 bg-${stat.color}-subtle text-${stat.color} me-3`}
+                >
                   <i className={`bi ${stat.icon} fs-3`}></i>
                 </div>
                 <div>
-                  <h6 className="card-subtitle text-muted text-uppercase small fw-bold mb-1">{stat.title}</h6>
-                  <h2 className="card-title mb-0 fw-bold">{stat.value}</h2>
+                  <h6 className="text-muted text-uppercase small fw-bold mb-1">
+                    {stat.title}
+                  </h6>
+                  <h2 className="fw-bold mb-0">{stat.value}</h2>
                 </div>
               </div>
             </div>
@@ -47,33 +149,25 @@ export default function Dashboard() {
         ))}
       </div>
 
-     
       <div className="row g-4">
-       
+        {/* Accesos rápidos */}
         <div className="col-lg-4">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-body p-4">
               <h5 className="fw-bold mb-4">Accesos Rápidos</h5>
               <div className="d-grid gap-3">
-                <button 
+                <button
+                  className="btn btn-light text-start p-3 rounded-3 d-flex align-items-center"
                   onClick={() => navigate("/admin/gestionar-anexos")}
-                  className="btn btn-light text-start p-3 rounded-3 border-0 d-flex align-items-center hover-shadow"
                 >
-                  <div className="bg-primary text-white rounded p-2 me-3"><i className="bi bi-list-ul"></i></div>
-                  <div>
-                    <div className="fw-bold">Ver Listado Completo</div>
-                    <div className="small text-muted">Gestionar todos los anexos</div>
+                  <div className="bg-primary text-white rounded p-2 me-3">
+                    <i className="bi bi-list-ul"></i>
                   </div>
-                </button>
-                
-                <button 
-                  onClick={() => navigate("/admin/configuracion")}
-                  className="btn btn-light text-start p-3 rounded-3 border-0 d-flex align-items-center hover-shadow"
-                >
-                  <div className="bg-secondary text-white rounded p-2 me-3"><i className="bi bi-gear-fill"></i></div>
                   <div>
-                    <div className="fw-bold">Configuración</div>
-                    <div className="small text-muted">Ajustes de la plataforma</div>
+                    <div className="fw-bold">Listado Completo</div>
+                    <div className="small text-muted">
+                      {anexos.length} registros encontrados
+                    </div>
                   </div>
                 </button>
               </div>
@@ -81,54 +175,80 @@ export default function Dashboard() {
           </div>
         </div>
 
-        
+        {/* Tabla */}
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
-              <h5 className="fw-bold m-0">Últimos Anexos Agregados</h5>
-              <button 
+              <h5 className="fw-bold m-0">Últimos Anexos</h5>
+              <button
                 className="btn btn-sm btn-outline-primary rounded-pill"
                 onClick={() => navigate("/admin/gestionar-anexos")}
               >
                 Ver todos
               </button>
             </div>
+
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0">
                 <thead className="table-light">
                   <tr>
-                    <th className="ps-4 text-secondary small text-uppercase">Nombre</th>
-                    <th className="text-secondary small text-uppercase">Fecha</th>
-                    <th className="text-secondary small text-uppercase">Estado</th>
-                    <th className="text-end pe-4 text-secondary small text-uppercase">Acción</th>
+                    <th className="ps-4">Ejecutor</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th className="text-end pe-4">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[1, 2, 3].map((item) => (
-                    <tr key={item}>
-                      <td className="ps-4 fw-bold text-dark">Anexo Ejemplo #{item}</td>
-                      <td className="text-muted small">03 Feb 2026</td>
-                      <td><span className="badge bg-success-subtle text-success rounded-pill px-3">Activo</span></td>
+                  {anexos.slice(0, 5).map((anexo) => (
+                    <tr key={anexo._id}>
+                      <td className="ps-4 fw-bold">
+                        {anexo.datosRellenados?.nombre_ejecutor ||
+                          "Sin asignar"}
+                      </td>
+                      <td className="text-muted small">
+                        {new Date(anexo.fechaGeneracion).toLocaleDateString(
+                          "es-CL",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )}
+                      </td>
+                      <td>
+                        <span className="badge bg-success-subtle text-success rounded-pill px-3">
+                          Generado
+                        </span>
+                      </td>
                       <td className="text-end pe-4">
-                        <button className="btn btn-sm btn-light text-primary"><i className="bi bi-eye-fill"></i></button>
+                        <button
+                          className="btn btn-sm btn-light text-primary"
+                          onClick={() =>
+                            navigate(`/admin/editar-anexo/${anexo._id}`)
+                          }
+                        >
+                          <i className="bi bi-pencil-fill"></i>
+                        </button>
                       </td>
                     </tr>
                   ))}
+
+                  {anexos.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="text-center p-4 text-muted"
+                      >
+                        No hay anexos registrados.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
       </div>
-      
-      
-      <style>{`
-        .bg-primary-subtle { background-color: rgba(13, 110, 253, 0.1); }
-        .bg-success-subtle { background-color: rgba(25, 135, 84, 0.1); }
-        .bg-warning-subtle { background-color: rgba(255, 193, 7, 0.1); }
-        .bg-info-subtle { background-color: rgba(13, 202, 240, 0.1); }
-        .hover-shadow:hover { background-color: #f8f9fa; box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); transition: 0.3s; }
-      `}</style>
     </div>
   );
 }

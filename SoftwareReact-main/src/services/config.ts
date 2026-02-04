@@ -1,4 +1,4 @@
-export const API_URL = "http://localhost:3000/api/anexos";
+export const API_URL = "http://localhost:3000/api";
 
 // Cambiamos el nombre aquí para que los otros archivos no den error
 export interface FormDataAnexoManual {

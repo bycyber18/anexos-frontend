@@ -1,11 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+// Importamos el servicio de Dashboard para leer
 import { DashboardService } from "../services/DashboardService";
+// Importamos el servicio de Anexo para borrar
+import { eliminarAnexo } from "../services/BorrarAnexo"; 
 
 interface Anexo {
   _id: string;
   nombrePlantilla: string;
   datosRellenados: {
+    nombre_ejecutor?: string; // Ajustado a nombre_ejecutor que es más común en tu schema
     nombre?: string; 
   };
   fechaGeneracion: string;
@@ -24,20 +28,42 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    const cargar = async () => {
-      try {
-        setLoading(true);
-        const data = await DashboardService.fetchDashboardData();
-        setAnexos(data.ultimosAnexos);
-        setStatsData({ total: data.total, hoy: data.hoy });
-      } catch (err) {
-        setError("Error de conexión con el servidor");
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargar();
+    cargarDatos();
   }, []);
+
+  const cargarDatos = async () => {
+    try {
+      setLoading(true);
+      const data = await DashboardService.fetchDashboardData();
+      setAnexos(data.ultimosAnexos);
+      setStatsData({ total: data.total, hoy: data.hoy });
+    } catch (err) {
+      setError("Error de conexión con el servidor");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- LÓGICA PARA BORRAR ---
+  const handleDelete = async (id: string) => {
+    const confirmar = window.confirm("¿Estás seguro de eliminar este anexo permanentemente?");
+    if (!confirmar) return;
+
+    try {
+      // 1. Llamamos al backend
+      await eliminarAnexo(id);
+
+      // 2. Actualizamos la UI localmente (filtramos la lista)
+      setAnexos(prevAnexos => prevAnexos.filter(a => a._id !== id));
+      
+      // 3. Actualizamos el contador total
+      setStatsData(prev => ({ ...prev, total: prev.total - 1 }));
+
+      alert("Anexo eliminado correctamente.");
+    } catch (error: any) {
+      alert("Error al eliminar: " + error.message);
+    }
+  };
 
   const statsCards = [
     { title: "Total Anexos", value: statsData.total.toString(), icon: "bi-folder-fill", color: "primary" },
@@ -50,7 +76,7 @@ export default function Dashboard() {
   if (error) return <div className="p-5 text-center text-danger fw-bold">{error}</div>;
 
   return (
-    <div className="container-fluid p-0">
+    <div className="container-fluid p-0 fade-in">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="h4 fw-bold text-dark">Panel de Control</h2>
@@ -111,25 +137,44 @@ export default function Dashboard() {
                     <th className="ps-4">Ejecutor</th>
                     <th>Fecha</th>
                     <th>Estado</th>
-                    <th className="text-end pe-4">Acción</th>
+                    <th className="text-end pe-4">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {anexos.map((anexo) => (
                     <tr key={anexo._id}>
                       <td className="ps-4 fw-bold">
-                        {/* 🔹 Aquí usamos la propiedad 'nombre' corregida */}
-                        {anexo.datosRellenados?.nombre || "Sin asignar"}
+                        {/* Intentamos mostrar nombre_ejecutor, o nombre, o fallback */}
+                        {anexo.datosRellenados?.nombre_ejecutor || anexo.datosRellenados?.nombre || "Sin asignar"}
                       </td>
                       <td className="text-muted small">
                         {new Date(anexo.fechaGeneracion).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" })}
                       </td>
                       <td><span className="badge bg-success-subtle text-success rounded-pill px-3">Generado</span></td>
+                      
+                      {/* --- COLUMNA DE ACCIONES --- */}
                       <td className="text-end pe-4">
-                        <button className="btn btn-sm btn-light text-primary" onClick={() => navigate(`/admin/editar-anexo/${anexo._id}`)}>
-                          <i className="bi bi-pencil-fill"></i>
-                        </button>
+                        <div className="d-flex justify-content-end gap-2">
+                            {/* Botón Editar */}
+                            <button 
+                                className="btn btn-sm btn-light text-primary border" 
+                                onClick={() => navigate(`/admin/editar-anexo/${anexo._id}`)}
+                                title="Editar"
+                            >
+                                <i className="bi bi-pencil-fill"></i>
+                            </button>
+
+                            {/* Botón Eliminar (NUEVO) */}
+                            <button 
+                                className="btn btn-sm btn-light text-danger border" 
+                                onClick={() => handleDelete(anexo._id)}
+                                title="Eliminar"
+                            >
+                                <i className="bi bi-trash-fill"></i>
+                            </button>
+                        </div>
                       </td>
+
                     </tr>
                   ))}
                   {anexos.length === 0 && (

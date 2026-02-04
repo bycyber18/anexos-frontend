@@ -14,12 +14,7 @@ export default function Configuracion() {
             <button className="list-group-item list-group-item-action active p-3 border-0">
               <span className="me-2">👤</span> Mi Perfil
             </button>
-            <button className="list-group-item list-group-item-action p-3 border-0">
-              <span className="me-2">🔔</span> Notificaciones
-            </button>
-            <button className="list-group-item list-group-item-action p-3 border-0">
-              <span className="me-2">🔒</span> Seguridad
-            </button>
+            
             <button className="list-group-item list-group-item-action p-3 border-0 text-danger">
               <span className="me-2">🚪</span> Cerrar Sesión
             </button>
@@ -70,22 +65,7 @@ export default function Configuracion() {
 
               <hr className="my-5 text-muted opacity-25" />
 
-              {/* Sección: Preferencias del Sistema */}
-              <section>
-                <h5 className="fw-bold mb-4">Preferencias del Sistema</h5>
-                <div className="form-check form-switch mb-3">
-                  <input className="form-check-input" type="checkbox" id="notifyEmail" defaultChecked />
-                  <label className="form-check-label" htmlFor="notifyEmail">
-                    Recibir notificaciones por correo al finalizar un anexo
-                  </label>
-                </div>
-                <div className="form-check form-switch mb-3">
-                  <input className="form-check-input" type="checkbox" id="darkMode" />
-                  <label className="form-check-label" htmlFor="darkMode">
-                    Activar modo oscuro (Beta)
-                  </label>
-                </div>
-              </section>
+             
 
               {/* Botones de guardado */}
               <div className="d-flex justify-content-end gap-2 mt-5">

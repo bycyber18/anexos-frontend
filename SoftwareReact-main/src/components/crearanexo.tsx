@@ -35,7 +35,7 @@ export default function CrearAnexo() {
                   </div>
                 </div>
 
-                {/* Sección 2: Información del Curso (Actualizada) */}
+                {/* Sección 2: Información del Curso */}
                 <div className="mb-4">
                   <h5 className="fw-bold mb-3 pb-2 border-bottom text-primary">2. Información del Curso</h5>
                   <div className="row g-3">
@@ -66,6 +66,29 @@ export default function CrearAnexo() {
                   </div>
                 </div>
 
+                {/* --- NUEVA SECCIÓN: SUBIDA DE ARCHIVOS --- */}
+                <div className="mb-4">
+                  <h5 className="fw-bold mb-3 pb-2 border-bottom text-primary">3. Documentación de Respaldo</h5>
+                  
+                  {/* Zona de carga visual */}
+                  <div className="p-4 rounded-3 text-center bg-light border" style={{borderStyle: 'dashed !important', borderColor: '#ced4da'}}>
+                    <div className="mb-2">
+                        {/* Ícono simulado con emoji o clase bi-cloud-upload si tienes iconos */}
+                        <span className="fs-1 text-muted">☁️</span> 
+                    </div>
+                    <h6 className="fw-bold mb-1">Adjuntar archivos del curso</h6>
+                    <p className="text-muted small mb-3">Sube el temario, lista de asistencia o cotización (PDF, JPG, PNG)</p>
+                    
+                    <div className="row justify-content-center">
+                        <div className="col-md-8">
+                            <input type="file" className="form-control" multiple />
+                        </div>
+                    </div>
+                    <div className="mt-2 text-muted small fst-italic">Máximo 10MB por archivo</div>
+                  </div>
+                </div>
+                {/* ----------------------------------------- */}
+
                 {/* Botones de Acción */}
                 <div className="d-flex justify-content-end gap-2 pt-3 border-top">
                   <button type="button" className="btn btn-light rounded-pill px-4">Cancelar</button>
@@ -91,9 +114,13 @@ export default function CrearAnexo() {
                   <span className="bg-primary rounded-circle me-2 d-inline-flex justify-content-center align-items-center" style={{width: '20px', height: '20px', fontSize: '10px'}}>2</span>
                   Ingresa los detalles técnicos del curso.
                 </li>
-                <li className="d-flex align-items-center">
+                <li className="mb-3 d-flex align-items-center">
                   <span className="bg-primary rounded-circle me-2 d-inline-flex justify-content-center align-items-center" style={{width: '20px', height: '20px', fontSize: '10px'}}>3</span>
-                  Genera el PDF para firma digital o física.
+                  <strong className="text-primary ms-1 me-1">Nuevo:</strong> Adjunta la evidencia.
+                </li>
+                <li className="d-flex align-items-center">
+                  <span className="bg-primary rounded-circle me-2 d-inline-flex justify-content-center align-items-center" style={{width: '20px', height: '20px', fontSize: '10px'}}>4</span>
+                  Genera el PDF para firma.
                 </li>
               </ul>
             </div>

@@ -116,7 +116,7 @@ export default function CrearAnexo() {
                 </li>
                 <li className="mb-3 d-flex align-items-center">
                   <span className="bg-primary rounded-circle me-2 d-inline-flex justify-content-center align-items-center" style={{width: '20px', height: '20px', fontSize: '10px'}}>3</span>
-                  <strong className="text-primary ms-1 me-1">Nuevo:</strong> Adjunta la evidencia.
+                  <strong className="text-primary ms-1 me-1"></strong> Adjunta la evidencia.
                 </li>
                 <li className="d-flex align-items-center">
                   <span className="bg-primary rounded-circle me-2 d-inline-flex justify-content-center align-items-center" style={{width: '20px', height: '20px', fontSize: '10px'}}>4</span>

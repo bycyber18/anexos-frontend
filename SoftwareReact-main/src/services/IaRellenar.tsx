@@ -1,14 +1,14 @@
 import axios from "axios";
-// IMPORTANTE: Agrega estas importaciones para quitar el rojo
-import { API_URL, getAuthHeaders, FormDataAnexoManual } from "./config"; 
+// Usamos "import type" para la interfaz y mantenemos el import normal para el resto
+import { API_URL, getAuthHeaders } from "./config";
+import type { FormDataAnexoManual } from "./config"; 
 
 export const completarCamposConIA = async (datosParciales: Partial<FormDataAnexoManual>) => {
   try {
-    // Enviamos lo que el usuario escribió para que la IA deduzca el resto
+    // IMPORTANTE: Asegúrate de usar la ruta completa a /inteligente
     const response = await axios.post(`${API_URL}/inteligente`, datosParciales, getAuthHeaders());
     
-    // Retorna el objeto completo (Nombre + Objetivos + Contenidos generados)
-    return response.data; 
+    return response.data;
   } catch (error: any) {
     const mensaje = error.response?.data?.error || "La IA no pudo completar los campos";
     throw new Error(mensaje);

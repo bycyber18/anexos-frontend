@@ -71,7 +71,7 @@ export default function Login() {
 
           <form onSubmit={handleLogin}>
             
-        /* Input Email con transición de borde */
+        
             <div className="mb-4">
               <label className="form-label small fw-bold text-muted text-uppercase" style={{fontSize: '0.75rem'}}>Correo</label>
               <div className="input-group input-group-lg group-focus-effect">
@@ -89,7 +89,7 @@ export default function Login() {
               </div>
             </div>
 
-            /* Input Password */
+            
             <div className="mb-2">
               <label className="form-label small fw-bold text-muted text-uppercase" style={{fontSize: '0.75rem'}}>Contraseña</label>
               <div className="input-group input-group-lg group-focus-effect">
@@ -143,7 +143,7 @@ export default function Login() {
 
       </div>
 
-      /* --- ESTILOS CSS --- */
+     
       <style>{`
         /* 1. Entrada de la Tarjeta (Sube y aparece) */
         .card-entry {

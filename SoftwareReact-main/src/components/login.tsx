@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loginService } from '../services/authServices';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,29 +12,24 @@ export default function Login() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    console.log("Login con:", { email, password });
+  try {
+    const data = await loginService(email, password);
 
-    setTimeout(() => {
-      
-      if (email && password) {
-        localStorage.setItem('token', 'token-demo-123');
-        localStorage.setItem('user', JSON.stringify({ nombre: 'Admin', email: email }));
-        
-       
-        navigate('/dashboard'); 
-      } else {
-        setError("Credenciales incorrectas (prueba escribiendo cualquier cosa)");
-        setLoading(false);
-      }
-    }, 1500); 
-  };
+    // Guardar datos reales
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-  
+    navigate("/dashboard");
+  } catch (err: any) {
+    setError("Email o contraseña incorrectos");
+    setLoading(false);
+  }
+};
 
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light position-relative overflow-hidden">

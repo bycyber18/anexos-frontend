@@ -1,5 +1,6 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
+import { logout } from "../utils/auth";
 
 const menuItems = [
   { name: "Dashboard", path: "/dashboard", emoji: "🏠" },
@@ -39,7 +40,12 @@ export default function LayoutAdmin() {
       <div className="flex-fill d-flex flex-column overflow-hidden">
         <header className="navbar navbar-light bg-white px-4 py-3 shadow-sm border-bottom">
           <h1 className="h5 m-0 fw-bold">Panel de Administración</h1>
-          <button className="btn btn-sm btn-outline-danger">Cerrar Sesión</button>
+          <button
+            className="btn btn-sm btn-outline-danger"
+            onClick={logout}
+          >
+            Cerrar Sesión
+          </button>
         </header>
 
         <main className="p-4 overflow-auto">

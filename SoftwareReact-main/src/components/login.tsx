@@ -16,7 +16,6 @@ export default function Login() {
     setError("");
     setLoading(true);
 
-
     console.log("Login con:", { email, password });
 
     setTimeout(() => {
@@ -33,6 +32,8 @@ export default function Login() {
       }
     }, 1500); 
   };
+
+  
 
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light position-relative overflow-hidden">

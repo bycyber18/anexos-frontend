@@ -1,3 +1,5 @@
+import { logout } from "../utils/auth";
+
 export default function Configuracion() {
   return (
     <div className="container-fluid fade-in">
@@ -71,6 +73,12 @@ export default function Configuracion() {
               <div className="d-flex justify-content-end gap-2 mt-5">
                 <button className="btn btn-light rounded-pill px-4">Descartar</button>
                 <button className="btn btn-primary rounded-pill px-4 shadow-sm">Guardar Cambios</button>
+                <button
+              className="list-group-item list-group-item-action p-3 border-0 text-danger"
+              onClick={logout}
+            >
+              <span className="me-2">🚪</span> Cerrar Sesión
+            </button>
               </div>
 
             </div>

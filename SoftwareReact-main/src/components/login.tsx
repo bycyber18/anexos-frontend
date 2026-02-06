@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginService } from '../services/authServices';
 
+import { AuthService } from '../services/authServices';
 export default function Login() {
   const navigate = useNavigate();
   
@@ -13,38 +13,38 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const data = await loginService(email, password);
+    try {
+      // 👇 Llamamos al servicio (Él se encarga de guardar el token internamente)
+      await AuthService.login(email, password);
 
-    // Guardar datos reales
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    navigate("/dashboard");
-  } catch (err: any) {
-    setError("Email o contraseña incorrectos");
-    setLoading(false);
-  }
-};
+      // Si no hay error, redirigimos
+      navigate("/dashboard");
+      
+    } catch (err: any) {
+      // Mostramos el error que viene del backend o uno genérico
+      setError(err.message || "Email o contraseña incorrectos");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light position-relative overflow-hidden">
       
-    
+      {/* Fondo animado */}
       <div className="position-absolute w-100 h-100 bg-animated"></div>
 
       <div className="card border-0 shadow-lg rounded-4 overflow-hidden card-entry" style={{ maxWidth: '400px', width: '100%', zIndex: 10 }}>
         
-       
+        {/* Header Animado */}
         <div className="bg-primary p-4 text-center text-white position-relative overflow-hidden">
-         
+          
           <div className="position-absolute top-0 start-0 translate-middle rounded-circle bg-white opacity-10 float-animation" 
                style={{width: '150px', height: '150px'}}></div>
-          
           
           <div className="position-absolute bottom-0 end-0 translate-middle rounded-circle bg-white opacity-10 float-animation-delayed" 
                style={{width: '100px', height: '100px'}}></div>
@@ -58,7 +58,7 @@ export default function Login() {
 
         <div className="card-body p-4 p-md-5">
           
-          
+          {/* Mensaje de Error */}
           {error && (
             <div className="alert alert-danger d-flex align-items-center small py-2 rounded-3 mb-4 shake-animation" role="alert">
               <i className="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
@@ -68,7 +68,7 @@ export default function Login() {
 
           <form onSubmit={handleLogin}>
             
-        
+            {/* Input Email */}
             <div className="mb-4">
               <label className="form-label small fw-bold text-muted text-uppercase" style={{fontSize: '0.75rem'}}>Correo</label>
               <div className="input-group input-group-lg group-focus-effect">
@@ -86,7 +86,7 @@ export default function Login() {
               </div>
             </div>
 
-            
+            {/* Input Password */}
             <div className="mb-2">
               <label className="form-label small fw-bold text-muted text-uppercase" style={{fontSize: '0.75rem'}}>Contraseña</label>
               <div className="input-group input-group-lg group-focus-effect">
@@ -140,7 +140,7 @@ export default function Login() {
 
       </div>
 
-     
+      {/* ESTILOS CSS EN LÍNEA (Para mantener todo en un archivo) */}
       <style>{`
         /* 1. Entrada de la Tarjeta (Sube y aparece) */
         .card-entry {
@@ -157,7 +157,7 @@ export default function Login() {
           animation: float 6s ease-in-out infinite;
         }
         .float-animation-delayed {
-          animation: float 7s ease-in-out infinite 1s; /* Retraso para que no se muevan igual */
+          animation: float 7s ease-in-out infinite 1s;
         }
 
         @keyframes float {
@@ -193,7 +193,7 @@ export default function Login() {
           transition: box-shadow 0.3s ease;
         }
         .form-control:focus {
-          box-shadow: none; /* Quitamos el default de bootstrap */
+          box-shadow: none;
         }
 
         /* 6. Botón Interactivo */
@@ -208,7 +208,6 @@ export default function Login() {
           transform: translateY(0);
         }
         
-        /* Flecha del botón se mueve al hover */
         .btn-animate:hover .arrow-slide {
           display: inline-block;
           animation: slideRight 0.5s infinite alternate;
